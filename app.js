@@ -153,7 +153,6 @@ const tags = {
 		'soarin',
 		'sombra',
 		'sonata dusk',
-		'sparkle shining armor',
 		'spike',
 		'spitfire',
 		'stormwalker',
@@ -178,22 +177,47 @@ const tags = {
 		res.end( 'User-agent: *\nDisallow: /' )
 	})
 
-	await server.get( '/images/watched.rss', async (req, res) => {
-
+	await server.get( '/api/watched.rss', async (req, res) => {
 		// if ( req.query['key'] !== 'sikritkey' ) return;
 
 		res.set('Content-Type', 'application/rss+xml')
 
 		res.end(
 			( await getPage( `https://derpibooru.org/images/watched.rss?key=${req.query.key}`, true ) )
-			//.replace( /(https:\/\/derpicdn\.net\/img\/\d+\/\d+\/\d+\/\d+\/)\w+(\.\w+)/ig, '$1full$2' )
 			.replace(
-				/(<item>\s+<title>)(.*?)(<\/title>(?:\n.*){3}Tagged: .*Tagged: )(.*?)(".*\<img .*)(https:\/\/derpicdn\.net\/img\/)(\d+\/\d+\/\d+\/\d+)\/\w+(\.\w+)(.*(?:\n.*){3}<pubDate>)(.*?)(<\/pubDate>)/ig,
-				(_, misc1, title, misc2, taglist, misc3, prefix, path, ext, misc4, date, misc5) =>
+				/(<item>\s+<title>)(.*?)(<\/title>(?:\n.*){3}Tagged: .*Tagged: )(.*?)(".*\<img .*)(https:\/\/derpicdn\.net\/img\/)(\d+\/\d+\/\d+\/)(\d+)\/\w+(\.\w+)(.*(?:\n.*){3}<pubDate>)(.*?)(<\/pubDate>)/ig,
+				(_, misc1, title, misc2, taglist, misc3, prefix, path, id, ext, misc4, date, misc5) =>
 					[
 						misc1,
-						path.match( /\d+$/ )[0], '__',
-						taglist
+						id, '.json',
+						misc2, taglist, misc3,
+						'https://derpibooru.org/', id, '.json',
+						misc4, date, misc5,
+					].join('')
+			)
+		)
+	})
+
+	await server.get( '/images/watched.rss', async (req, res) => {
+		res.set('Content-Type', 'application/rss+xml')
+
+		res.end(
+			( await getPage( `https://derpibooru.org/images/watched.rss?key=${req.query.key}`, true ) )
+			//.replace( /(https:\/\/derpicdn\.net\/img\/\d+\/\d+\/\d+\/\d+\/)\w+(\.\w+)/ig, '$1full$2' )
+			.replace(
+				/(<item>\s+<title>)(.*?)(<\/title>(?:\n.*){3}Tagged: .*Tagged: )(.*?)(".*\<img .*)(https:\/\/derpicdn\.net\/img\/)(\d+\/\d+\/\d+\/)(\d+)\/\w+(\.\w+)(.*(?:\n.*){3}<pubDate>)(.*?)(<\/pubDate>)/ig,
+				(_, misc1, title, misc2, taglist, misc3, prefix, path, id, ext, misc4, date, misc5) =>
+					[
+						misc1,
+						'derpi_', id, ext,
+						misc2, taglist, misc3,
+						prefix, path, id, '/full', ext,
+						misc4, date, misc5,
+					].join('')
+					/*[
+						misc1,
+						//path.match( /\d+$/ )[0], '__',
+						id, '__', taglist
 							.split(', ')
 							.sort( (a, b) => {
 								if ( xor( [a, b], e => tags.warning.includes(e) ) )
@@ -246,9 +270,9 @@ const tags = {
 							,
 						'__', (new Date(Date.parse( date ))).toISOString().replace( /[:.]/g,'_'), ext,
 						misc2, taglist, misc3,
-						prefix, 'view/', path, ext,
+						prefix, 'view/', path, id, ext,
 						misc4, date, misc5,
-					].join('')
+					].join('')*/
 			)
 		)
 	})
