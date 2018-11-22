@@ -5,6 +5,7 @@ if ( process.env.PORT == null )		// Heroku
 
 const fetch = require('node-fetch')
 const server = require('express')()
+// const entities = require('html-entities').XmlEntities
 const intlSort = ( new Intl.Collator() ).compare
 
 const xor = (arr, f) =>
@@ -170,6 +171,8 @@ const tags = {
 		'zecora',
 	],
 }
+const curDate = new Date()
+const date = `${curDate.getFullYear()}/${curDate.getMonth().toString().padStart(2, '0')}/${curDate.getDate().toString().padStart(2, '0')}`
 
 ;( async () => { try {
 
@@ -185,8 +188,8 @@ const tags = {
 		res.end(
 			( await getPage( `https://derpibooru.org/images/watched.rss?key=${req.query.key}`, true ) )
 			.replace(
-				/(<item>\s+<title>)(.*?)(<\/title>(?:\n.*){3}Tagged: .*Tagged: )(.*?)(".*\<img .*)(https:\/\/derpicdn\.net\/img\/)(\d+\/\d+\/\d+\/)(\d+)\/\w+(\.\w+)(.*(?:\n.*){3}<pubDate>)(.*?)(<\/pubDate>)/ig,
-				(_, misc1, title, misc2, taglist, misc3, prefix, path, id, ext, misc4, date, misc5) =>
+				/(<item>\s+<title>)#(\d+) - (.*?)(<\/title>(?:\n.*){3}Tagged: .*Tagged: )(.*?)(".*\<img .*)(https:\/\/derpicdn\.net\/(?:img\/|assets\/loading\/[^"]+))(\d+\/\d+\/\d+\/\d+\/|)\w+(\.\w+|)(.*(?:\n.*){3}<pubDate>)(.*?)(<\/pubDate>)/ig,
+				(_, misc1, id, title, misc2, taglist, misc3, prefix, path, ext, misc4, date, misc5) =>
 					[
 						misc1,
 						'derpi_', id, '.json',
@@ -205,13 +208,13 @@ const tags = {
 			( await getPage( `https://derpibooru.org/images/watched.rss?key=${req.query.key}`, true ) )
 			//.replace( /(https:\/\/derpicdn\.net\/img\/\d+\/\d+\/\d+\/\d+\/)\w+(\.\w+)/ig, '$1full$2' )
 			.replace(
-				/(<item>\s+<title>)(.*?)(<\/title>(?:\n.*){3}Tagged: .*Tagged: )(.*?)(".*\<img .*)(https:\/\/derpicdn\.net\/img\/)(\d+\/\d+\/\d+\/)(\d+)\/\w+(\.\w+)(.*(?:\n.*){3}<pubDate>)(.*?)(<\/pubDate>)/ig,
-				(_, misc1, title, misc2, taglist, misc3, prefix, path, id, ext, misc4, date, misc5) =>
+				/(<item>\s+<title>)#(\d+) - (.*?)(<\/title>(?:\n.*){3}Tagged: .*Tagged: )(.*?)(".*\<img .*)(https:\/\/derpicdn\.net\/(?:img\/|assets\/loading\/[^"]+))(\d+\/\d+\/\d+\/\d+\/|)\w+(\.\w+|)(.*(?:\n.*){3}<pubDate>)(.*?)(<\/pubDate>)/ig,
+				(_, misc1, id, title, misc2, taglist, misc3, prefix, path, ext, misc4, date, misc5) =>
 					[
 						misc1,
 						'derpi_', id, ext,
 						misc2, taglist, misc3,
-						prefix, path, id, '/full', ext,
+						'https://derpicdn.net/img/', (path || `${date}/id/`), 'full', ext,
 						misc4, date, misc5,
 					].join('')
 					/*[
