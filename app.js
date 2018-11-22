@@ -189,7 +189,7 @@ const tags = {
 				(_, misc1, title, misc2, taglist, misc3, prefix, path, id, ext, misc4, date, misc5) =>
 					[
 						misc1,
-						id, '.json',
+						'derpi_', id, '.json',
 						misc2, taglist, misc3,
 						'https://derpibooru.org/', id, '.json',
 						misc4, date, misc5,
